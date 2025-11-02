@@ -3,7 +3,6 @@ import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(request, response) {
-  // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -23,28 +22,29 @@ export default async function handler(request, response) {
       return response.status(400).json({ valid: false, error: 'Missing customer_id' });
     }
 
-    // Check for successful payments
-    const payments = await stripe.paymentIntents.list({
+    // Check for active subscriptions
+    const subscriptions = await stripe.subscriptions.list({
       customer: customer_id,
-      limit: 10,
-      status: 'succeeded'
+      status: 'active',
+      limit: 1
     });
 
-    const validPayment = payments.data.find(payment => {
-      const oneYearAgo = Date.now() - (365 * 24 * 60 * 60 * 1000);
-      const isRecent = payment.created * 1000 > oneYearAgo;
-      return isRecent;
-    });
+    const activeSubscription = subscriptions.data[0];
 
-    if (validPayment) {
+    if (activeSubscription) {
+      const priceId = activeSubscription.items.data[0].price.id;
+      const isAnnual = priceId === process.env.STRIPE_ANNUAL_PRICE_ID;
+      
       return response.json({ 
         valid: true,
-        type: 'lifetime',
+        type: 'subscription',
         customer_id: customer_id,
-        purchased_at: validPayment.created
+        plan: isAnnual ? 'annual' : 'monthly',
+        current_period_end: activeSubscription.current_period_end,
+        price_id: priceId
       });
     } else {
-      return response.json({ valid: false, error: 'No valid payment found' });
+      return response.json({ valid: false, error: 'No active subscription found' });
     }
   } catch (error) {
     console.error('Verification error:', error);
