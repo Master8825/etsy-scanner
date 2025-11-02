@@ -4,11 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Etsy Scanner Pro - Chrome Extension</title>
-    <meta name="description" content="Professional Etsy market research tool for analyzing competitor stores and product variations">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .pricing-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .plan {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 30px 20px;
+            text-align: center;
+            width: 250px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .plan.annual {
+            border-color: #007cba;
+            position: relative;
+        }
+        .popular {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #007cba;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .price {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: #333;
+        }
+        .price span {
+            font-size: 16px;
+            color: #666;
+            font-weight: normal;
+        }
+        .savings {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .features {
+            text-align: left;
+            margin: 20px 0;
+        }
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .features li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h1>Etsy Scanner Pro</h1>
-    <p>Professional Chrome Extension for Etsy Sellers</p>
-    <p>Contact: your-email@gmail.com</p>
+    <div class="header">
+        <h1>Etsy Scanner Pro</h1>
+        <p>Professional Etsy Market Research Chrome Extension</p>
+    </div>
+
+    <div class="pricing-section">
+        <h2 style="text-align: center;">Choose Your Plan</h2>
+        
+        <div class="pricing-options">
+            <div class="plan monthly">
+                <h3>Monthly</h3>
+                <div class="price">$6.95<span>/month</span></div>
+                <div class="features">
+                    <ul>
+                        <li>All Pro Features</li>
+                        <li>Store Analytics</li>
+                        <li>CSV/XLSX Export</li>
+                        <li>Priority Support</li>
+                        <li>Cancel anytime</li>
+                    </ul>
+                </div>
+                <button onclick="purchasePro('monthly')">Subscribe Monthly</button>
+            </div>
+            
+            <div class="plan annual">
+                <div class="popular">MOST POPULAR</div>
+                <h3>Annual</h3>
+                <div class="price">$69.95<span>/year</span></div>
+                <div class="savings">Save 16% ($13.45)</div>
+                <div class="features">
+                    <ul>
+                        <li>All Pro Features</li>
+                        <li>Store Analytics</li>
+                        <li>CSV/XLSX Export</li>
+                        <li>Priority Support</li>
+                        <li>2 Months Free</li>
+                    </ul>
+                </div>
+                <button onclick="purchasePro('annual')">Subscribe Annually</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    async function purchasePro(plan) {
+        try {
+            const API_URL = 'https://etsy-scanner.vercel.app/api';
+            
+            const response = await fetch(`${API_URL}/create-checkout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    plan: plan
+                })
+            });
+            
+            const data = await response.json();
+            
+            // Redirect to Stripe Checkout
+            window.location.href = `https://checkout.stripe.com/pay/${data.id}`;
+        } catch (error) {
+            alert('Error starting checkout. Please try again.');
+        }
+    }
+    </script>
 </body>
 </html>
