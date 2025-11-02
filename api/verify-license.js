@@ -2,25 +2,25 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export default async function handler(req, res) {
+export default async function handler(request, response) {
   // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (request.method !== 'POST') {
+    return response.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { customer_id } = req.body;
+    const { customer_id } = request.body;
     
     if (!customer_id) {
-      return res.status(400).json({ valid: false, error: 'Missing customer_id' });
+      return response.status(400).json({ valid: false, error: 'Missing customer_id' });
     }
 
     // Check for successful payments
@@ -37,17 +37,17 @@ export default async function handler(req, res) {
     });
 
     if (validPayment) {
-      return res.json({ 
+      return response.json({ 
         valid: true,
         type: 'lifetime',
         customer_id: customer_id,
         purchased_at: validPayment.created
       });
     } else {
-      return res.json({ valid: false, error: 'No valid payment found' });
+      return response.json({ valid: false, error: 'No valid payment found' });
     }
   } catch (error) {
     console.error('Verification error:', error);
-    return res.status(500).json({ valid: false, error: 'Server error' });
+    return response.status(500).json({ valid: false, error: 'Server error' });
   }
 }
