@@ -1,0 +1,28 @@
+<!-- success.html -->
+<div id="licenseInfo" style="display: none;">
+  <h3>🎉 Purchase Successful!</h3>
+  <p>Your license key: <strong id="licenseKey"></strong></p>
+  <p>Copy this key and enter it in the Etsy Scanner extension to activate Pro features.</p>
+  <button onclick="copyLicenseKey()">Copy License Key</button>
+</div>
+
+<script>
+// Get the session ID from URL
+const urlParams = new URLSearchParams(window.location.search);
+const sessionId = urlParams.get('session_id');
+
+if (sessionId) {
+  fetch(`/success-info?session_id=${sessionId}`)
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('licenseKey').textContent = data.license_key;
+      document.getElementById('licenseInfo').style.display = 'block';
+    });
+}
+
+function copyLicenseKey() {
+  const licenseKey = document.getElementById('licenseKey').textContent;
+  navigator.clipboard.writeText(licenseKey);
+  alert('License key copied to clipboard!');
+}
+</script>
