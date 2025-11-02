@@ -12,19 +12,29 @@ export default async function handler(request, response) {
   }
 
   try {
+    const { plan } = request.body; // 'monthly' or 'annual'
+    
+    let priceId;
+    if (plan === 'annual') {
+      priceId = process.env.STRIPE_ANNUAL_PRICE_ID; // $69.95/year
+    } else {
+      priceId = process.env.STRIPE_MONTHLY_PRICE_ID; // $6.95/month (default)
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],
-      mode: 'payment',
+      mode: 'subscription',
       success_url: `${process.env.SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: process.env.CANCEL_URL,
       metadata: {
-        product: 'Etsy Scanner Pro'
+        product: 'Etsy Scanner Pro',
+        plan: plan || 'monthly'
       }
     });
 
