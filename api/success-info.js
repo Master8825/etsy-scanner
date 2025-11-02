@@ -1,4 +1,6 @@
-const Stripe = require('stripe');
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,17 +12,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const session = await stripe.checkout.sessions.retrieve(session_id);
     
-    res.json({
+    return res.json({
       customer_id: session.customer,
-      license_key: session.customer, // Using customer ID as license
+      license_key: session.customer,
       product: session.metadata.product,
       success: true
     });
   } catch (error) {
     console.error('Success info error:', error);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
