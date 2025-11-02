@@ -1,7 +1,9 @@
-const Stripe = require('stripe');
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
-  // Enable CORS
+  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -21,8 +23,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ valid: false, error: 'Missing customer_id' });
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    
     // Check for successful payments
     const payments = await stripe.paymentIntents.list({
       customer: customer_id,
@@ -30,25 +30,24 @@ export default async function handler(req, res) {
       status: 'succeeded'
     });
 
-    // Check if any payment is for our product and within last year
     const validPayment = payments.data.find(payment => {
       const oneYearAgo = Date.now() - (365 * 24 * 60 * 60 * 1000);
-      const isRecent = payment.created * 1000 > oneYearAgo; // Stripe uses seconds
+      const isRecent = payment.created * 1000 > oneYearAgo;
       return isRecent;
     });
 
     if (validPayment) {
-      res.json({ 
+      return res.json({ 
         valid: true,
         type: 'lifetime',
         customer_id: customer_id,
         purchased_at: validPayment.created
       });
     } else {
-      res.json({ valid: false, error: 'No valid payment found' });
+      return res.json({ valid: false, error: 'No valid payment found' });
     }
   } catch (error) {
     console.error('Verification error:', error);
-    res.status(500).json({ valid: false, error: 'Server error' });
+    return res.status(500).json({ valid: false, error: 'Server error' });
   }
 }
